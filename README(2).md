@@ -122,7 +122,7 @@ If you use this tool in your work, please cite:
 
 ```
 Eto, T. (2026). SaMD Regulatory Pathway Navigator. 
-TechInHSR LLC. https://github.com/[your-username]/samd-regulatory-navigator
+TechInHSR LLC. https://github.com/etotamiko-lab/samd-regulatory-navigator
 ```
 
 ## ⚖️ Legal Disclaimer
