@@ -1,9 +1,5 @@
-# REGULATORY ANALYSIS: AI Conversational Agent for Diabetes Education
+# REGULATORY ANALYSIS: AI Conversational Agent for Patient Education
 ## Fact-Checked Against Federal Regulations
-
-**Date:** January 26, 2026  
-**Analyst:** Tamiko Adams, CIP  
-**Project:** Trustworthy, Community-Guided AI for Culturally Adaptive Patient Education on Diabetes-Related Risks (Aim 1 only)
 
 ---
 
@@ -38,13 +34,13 @@ FDA and IMDRF guidance on SaMD Clinical Evaluation (IMDRF/SaMD WG/N41FINAL:2017,
 **Analysis Based on Intended Use (Not Study Procedures):**
 
 The project description states the intended use is to develop:
-> "a culturally adaptive, patient-facing conversational agent that uses explainable AI to personalize cardiometabolic health education"
+> "a patient-facing conversational agent that uses explainable AI to personalize health education specific to their condition"
 
 The system will:
 - Use clinical data to generate personalized medical recommendations
 - Identify individual risk factors through AI risk modeling
 - Communicate modifiable behaviors tailored to patient context
-- Deliver direct patient education about diabetes and cardiovascular disease management
+- Deliver direct patient education about their specific condition and disease management
 
 #### Device Definition Verification
 
@@ -67,14 +63,14 @@ To be excluded from device definition under Section 520(o)(1)(E) of the FD&C Act
 > "Under the Final Guidance, however, no CDS software functions intended for use by patients or caregivers qualify for exclusion under the Non-Device CDS exception in Section 520(o)(1)(E)."
 
 **CONCLUSION STEP 1:** This AI conversational agent IS a medical device because:
-- It is intended for diagnosis/treatment/prevention of disease (diabetes, cardiovascular conditions)
+- It is intended for diagnosis/treatment/prevention of disease (enter their specific disease/condition)
 - It is patient-facing, not HCP-facing
 - It provides personalized medical recommendations based on clinical data
 - It does not meet CDS exclusion criteria
 
 #### Important Note: Why This Is NOT a "General Wellness" Product
 
-**Common Misclassification Attempt:** Some may argue that a diabetes/cardiovascular education chatbot qualifies as a "general wellness" product under FDA's General Wellness Guidance (updated January 2026).
+**Common Misclassification Attempt:** Some may argue that a (enter condition) education chatbot qualifies as a "general wellness" product under FDA's General Wellness Guidance (updated January 2026).
 
 **This argument fails for the following reasons:**
 
@@ -91,7 +87,7 @@ To qualify as a general wellness product eligible for enforcement discretion, a 
 **Why This Chatbot Does NOT Qualify:**
 
 1. **Disease-Specific, Not General Wellness**
-   - The chatbot is explicitly designed for diabetes and cardiovascular disease management
+   - The chatbot is explicitly designed for (enter condition) disease management
    - It provides **personalized medical recommendations** based on **individual clinical data and risk modeling**
    - It identifies **individual risk factors** and recommends **modifiable behaviors tailored to patient context**
    - This goes beyond general wellness education to disease-specific medical guidance
@@ -105,7 +101,7 @@ To qualify as a general wellness product eligible for enforcement discretion, a 
 3. **Functions as Diagnostic/Treatment Tool**
    - **Identifies individual risk factors** = diagnostic function
    - **Recommends modifiable behaviors based on risk assessment** = treatment guidance
-   - Intended to **inform clinical management** of diabetes and cardiovascular conditions
+   - Intended to **inform clinical management** of (enter disease) conditions
    - Per FDA guidance: products that provide "information that a specific patient 'may exhibit signs' of a disease or condition or identifies a risk probability or risk score for a specific disease" do not qualify as general wellness
 
 4. **Not Low Risk**
@@ -117,7 +113,7 @@ To qualify as a general wellness product eligible for enforcement discretion, a 
    - The FDA General Wellness Guidance requires **low risk to safety** - personalized disease management advice poses **more than low risk**
 
 5. **Disqualifying Labeling/Functions** (per 2026 Guidance)
-   - References **specific diseases** (diabetes, cardiovascular disease)
+   - References **specific diseases** (enter specific condition/disease)
    - Provides **risk scores or risk probability** for specific conditions
    - Could be construed as **screening, monitoring, or management** tool
    - Characterizes individual patient status (risk factors)
@@ -437,7 +433,5 @@ This approach establishes proper regulatory infrastructure while recognizing tha
 
 **Document Prepared By:** Tamiko Eto, MA, CIP  
 **TechInHSR LLC**  
-**OECD.AI Expert Working Group Advisor**  
-**CAIDP Senior Teaching Fellow**
 
 *This analysis is based on current FDA regulations and guidance as of January 2026. Regulatory requirements are subject to change, and specific determinations should be made by the reviewing IRB in consultation with FDA as appropriate.*
