@@ -9,676 +9,961 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
-        
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+        body { font-family: 'DM Sans', sans-serif; }
+        .serif { font-family: 'DM Serif Display', serif; }
+        .fade-in { animation: fadeIn 0.25s ease-out; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+        :root {
+            --brand: #0b6e64;
+            --brand-light: #e6f4f2;
+            --brand-mid: #c0deda;
+            --brand-dark: #085049;
         }
-        
-        .fade-in {
-            animation: fadeIn 0.3s ease-in;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .brand-bg { background-color: var(--brand) !important; }
+        .brand-text { color: var(--brand) !important; }
+        .brand-border { border-color: var(--brand) !important; }
+        .brand-bg-light { background-color: var(--brand-light) !important; }
+        .brand-bg-mid { background-color: var(--brand-mid) !important; }
+        .brand-hover:hover { background-color: var(--brand-dark) !important; }
+        .brand-border-hover:hover { border-color: var(--brand) !important; }
+        .brand-outline { border: 2px solid var(--brand) !important; color: var(--brand) !important; }
+        .brand-outline:hover { background-color: var(--brand-light) !important; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; }
+            .print-wrap { box-shadow: none !important; }
         }
     </style>
 </head>
 <body class="bg-slate-50">
-    <div id="root"></div>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
 
-    <script type="text/babel">
-        const { useState } = React;
+/* ── tiny icon set ── */
+const Icon = {
+  chevron: () => <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>,
+  check:   () => <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>,
+  info:    () => <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>,
+  warn:    () => <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>,
+  refresh: () => <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>,
+  print:   () => <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>,
+  x:       () => <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>,
+};
 
-        // Icon components
-        const ChevronRight = () => (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-        );
+/* ── small reusable UI pieces ── */
+const Pill = ({ color, children }) => {
+  const map = {
+    teal:   'brand-bg-light brand-text brand-border border',
+    amber:  'bg-amber-100 text-amber-800 border border-amber-200',
+    red:    'bg-red-100 text-red-800 border border-red-200',
+    slate:  'bg-slate-100 text-slate-700 border border-slate-200',
+    green:  'bg-green-100 text-green-800 border border-green-200',
+  };
+  return <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${map[color]||map.slate}`}>{children}</span>;
+};
 
-        const CheckCircle = () => (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-        );
+const InfoBox = ({ color='teal', icon='info', children }) => {
+  const map = {
+    teal:  { wrap:'brand-bg-light brand-border border text-slate-900', ic:'brand-text' },
+    amber: { wrap:'bg-amber-50 border-amber-200 text-amber-900', ic:'text-amber-500' },
+    slate: { wrap:'bg-slate-50 border-slate-200 text-slate-700', ic:'text-slate-400' },
+  };
+  const s = map[color]||map.teal;
+  const I = Icon[icon]||Icon.info;
+  return (
+    <div className={`flex gap-2.5 rounded-lg border p-3 text-sm leading-relaxed ${s.wrap}`}>
+      <span className={`mt-0.5 ${s.ic}`}><I/></span>
+      <div>{children}</div>
+    </div>
+  );
+};
 
-        const AlertCircle = () => (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-        );
+/* Accordion-style expandable panel */
+const Expand = ({ title, badge, children }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border border-slate-200 rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
+      >
+        <span className="font-medium text-slate-800 text-sm flex items-center gap-2">
+          {title}{badge && <span className="ml-1">{badge}</span>}
+        </span>
+        <svg className={`w-4 h-4 text-slate-400 transition-transform ${open?'rotate-180':''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      {open && <div className="px-4 py-3 text-sm text-slate-700 leading-relaxed border-t border-slate-200 bg-white space-y-2">{children}</div>}
+    </div>
+  );
+};
 
-        const RefreshCw = () => (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-        );
+/* Two-column example card */
+const ExamplePair = ({ pass, fail }) => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+    <div className="rounded-md bg-green-50 border border-green-200 p-3">
+      <p className="text-xs font-semibold text-green-700 uppercase tracking-wide mb-1">✓ Meets criterion</p>
+      <p className="text-xs text-green-900 leading-relaxed">{pass}</p>
+    </div>
+    <div className="rounded-md bg-red-50 border border-red-200 p-3">
+      <p className="text-xs font-semibold text-red-700 uppercase tracking-wide mb-1">✗ Does not meet criterion</p>
+      <p className="text-xs text-red-900 leading-relaxed">{fail}</p>
+    </div>
+  </div>
+);
 
-        const InfoIcon = () => (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-        );
+/* Checklist items */
+const CheckList = ({ items, color='teal' }) => {
+  const ic = color==='green' ? 'text-green-600' : 'brand-text';
+  return (
+    <ul className="space-y-1.5">
+      {items.map((it,i) => (
+        <li key={i} className="flex gap-2 text-sm text-slate-700">
+          <span className={`mt-0.5 ${ic}`}><Icon.check/></span>
+          <span>{it}</span>
+        </li>
+      ))}
+    </ul>
+  );
+};
 
-        const SaMDDecisionTree = () => {
-            const [currentStep, setCurrentStep] = useState('start');
-            const [history, setHistory] = useState([]);
-            const [answers, setAnswers] = useState({});
+const AlertList = ({ items }) => (
+  <ul className="space-y-1.5">
+    {items.map((it,i) => (
+      <li key={i} className="flex gap-2 text-sm text-amber-900">
+        <span className="mt-0.5 text-amber-500"><Icon.warn/></span>
+        <span>{it}</span>
+      </li>
+    ))}
+  </ul>
+);
 
-            const decisionTree = {
-                start: {
-                    question: "Let's determine if your software qualifies as a medical device",
-                    info: "Software as a Medical Device (SaMD) means standalone software designed for medical purposes—it operates independently without being built into a hardware device.",
-                    options: [
-                        { label: "Yes, it's standalone software for medical purposes", next: "medical_purpose", value: "yes" },
-                        { label: "No, it's not standalone or not for medical use", next: "not_samd", value: "no" },
-                        { label: "I'd like help figuring this out", next: "samd_check", value: "unsure" }
-                    ]
-                },
-                samd_check: {
-                    question: "Which of these describes what your software does?",
-                    info: "Medical purposes typically include functions like diagnosing, treating, or preventing disease; analyzing patient data to inform clinical decisions; or helping triage patients.",
-                    options: [
-                        { label: "It performs at least one of these medical functions", next: "medical_purpose", value: "yes" },
-                        { label: "It doesn't perform these types of functions", next: "not_samd", value: "no" }
-                    ]
-                },
-                medical_purpose: {
-                    question: "Before we continue, let's check: Could this be a 'general wellness' product?",
-                    info: "Many people try to classify disease-specific education tools as 'general wellness' to avoid device regulations. Let's see if that applies here.",
-                    options: [
-                        { label: "It might be general wellness - let me check", next: "general_wellness_check", value: "check" },
-                        { label: "No, it's clearly disease-specific medical software", next: "intended_use", value: "medical" }
-                    ]
-                },
-                general_wellness_check: {
-                    question: "Does your software do any of the following?",
-                    info: "Per FDA's 2026 General Wellness Guidance, products are NOT general wellness if they have any of these characteristics:",
-                    type: "checklist",
-                    disqualifiers: [
-                        "Uses individual patient's clinical data to generate personalized recommendations",
-                        "Provides risk scores or risk probability for a specific disease (like diabetes or heart disease)",
-                        "Identifies individual risk factors based on clinical assessment",
-                        "Prompts or guides specific clinical actions or medical management",
-                        "Could be used for screening, monitoring, or managing a disease",
-                        "References specific diseases with clinical thresholds or diagnostic criteria"
-                    ],
-                    options: [
-                        { label: "Yes, it does one or more of these", next: "not_general_wellness", value: "disqualified" },
-                        { label: "No, none of these apply", next: "general_wellness_qualified", value: "qualified" }
-                    ]
-                },
-                not_general_wellness: {
-                    question: "Your software does not qualify as general wellness",
-                    info: "Based on FDA's 2026 General Wellness Guidance, your software is a medical device, not a general wellness product.",
-                    details: [
-                        {
-                            title: "Why It Matters",
-                            content: "The FDA's general wellness policy only applies to low-risk products for maintaining general health or promoting healthy lifestyles. Products that use clinical data for disease-specific risk assessment or management are regulated as medical devices."
-                        },
-                        {
-                            title: "Key Distinction",
-                            content: "General wellness = 'Exercise 30 minutes daily for heart health' (population-level advice). Medical device = 'Based on your blood pressure, glucose, and family history, here are personalized recommendations to reduce your cardiovascular risk' (individual clinical assessment)."
-                        }
-                    ],
-                    options: [
-                        { label: "Understood, continue with device classification", next: "intended_use", value: "continue" }
-                    ]
-                },
-                general_wellness_qualified: {
-                    conclusion: true,
-                    result: {
-                        type: "general_wellness",
-                        title: "Your Product May Qualify as General Wellness",
-                        details: [
-                            "If your software truly provides only general health education without disease-specific risk assessment, it may qualify for FDA's general wellness enforcement discretion",
-                            "General wellness products must be low-risk and intended only for maintaining general health",
-                            "Important: Even general wellness products must comply with other regulations like FTC advertising rules and HIPAA if handling health data",
-                            "We recommend reviewing FDA's 2026 General Wellness Guidance to confirm your classification"
-                        ]
-                    },
-                    options: [
-                        { label: "Start over with a different scenario", next: "start", value: "restart" }
-                    ]
-                },
-                intended_use: {
-                    question: "Who will use the software and how?",
-                    info: "This question is about the software's intended use once it's complete—not about your study design. We're asking about the end product.",
-                    options: [
-                        { label: "Patients will use it to get personalized medical advice or education", next: "patient_facing_device", value: "patient" },
-                        { label: "Healthcare professionals will use it to help make clinical decisions", next: "hcp_cds_check", value: "hcp" },
-                        { label: "It's for administrative or non-clinical purposes", next: "not_device", value: "admin" }
-                    ]
-                },
-                patient_facing_device: {
-                    question: "Your software provides medical information directly to patients",
-                    info: "The FDA's 2022 Clinical Decision Support guidance (updated in 2026) clarifies that patient-facing software providing medical recommendations is regulated as a medical device.",
-                    conclusion: true,
-                    result: {
-                        type: "device",
-                        title: "Your Software is Classified as a Medical Device",
-                        details: [
-                            "Patient-facing software that provides medical recommendations falls under device regulations",
-                            "This classification is based on the FDA CDS Guidance, which treats patient-facing clinical software differently from healthcare professional tools",
-                            "Next, we'll help you determine the regulatory pathway for your specific study"
-                        ]
-                    },
-                    options: [
-                        { label: "Continue to determine study requirements", next: "study_procedures", value: "continue" }
-                    ]
-                },
-                hcp_cds_check: {
-                    question: "Does your software meet all four of these criteria?",
-                    info: "The 21st Century Cures Act provides an exclusion for certain Clinical Decision Support software. All four criteria must be met:",
-                    criteria: [
-                        "Doesn't acquire, process, or analyze medical images or signals from diagnostic devices",
-                        "Displays or analyzes medical information like patient data, clinical guidelines, or research studies",
-                        "Supports healthcare professionals (they make the final decisions, not the software)",
-                        "Allows healthcare professionals to independently review how the software reached its recommendations"
-                    ],
-                    options: [
-                        { label: "Yes, meets all four criteria", next: "not_device", value: "all" },
-                        { label: "No, doesn't meet all four", next: "is_device", value: "not_all" }
-                    ]
-                },
-                is_device: {
-                    question: "Does your device qualify for any regulatory exemptions?",
-                    info: "Certain devices may be exempt from requiring an Investigational Device Exemption (IDE) application under 21 CFR 812.2(c).",
-                    options: [
-                        { label: "Yes, it qualifies for an exemption (pre-1976 device, 510(k)-cleared, or meets diagnostic exemption criteria)", next: "exempt_device", value: "exempt" },
-                        { label: "No exemptions apply", next: "study_procedures", value: "none" }
-                    ]
-                },
-                exempt_device: {
-                    conclusion: true,
-                    result: {
-                        type: "exempt",
-                        title: "Your Device Study May Qualify for IDE Exemption",
-                        details: [
-                            "Your device may be exempt from IDE requirements under 21 CFR 812.2(c)",
-                            "Important note: IRB review is still required under 21 CFR 56, even for exempt devices",
-                            "We recommend confirming exemption status with your IRB during protocol review"
-                        ]
-                    },
-                    options: [
-                        { label: "Start over", next: "start", value: "restart" }
-                    ]
-                },
-                study_procedures: {
-                    question: "What activities are planned for your current study phase?",
-                    info: "The regulatory requirements depend on what's actually happening in your study—specifically, whether the software's outputs could influence clinical care. Note: 'Participants' typically means the end-users (often clinicians) and/or patients whose care could be affected.",
-                    options: [
-                        { label: "Algorithm development and training using synthetic or de-identified data (no clinical care involvement)", next: "clinical_evaluation_concept", value: "dev" },
-                        { label: "Testing where outputs are visible to clinicians or patients and could influence care decisions", next: "risk_mitigation_check", value: "visible" },
-                        { label: "Observational study where outputs are generated but not shared with anyone (used only for validation)", next: "clinical_evaluation_concept", value: "observational" }
-                    ]
-                },
-                risk_mitigation_check: {
-                    question: "Does your study include risk mitigation protocols?",
-                    info: "Even when outputs are visible, proper safeguards can reduce the risk level. The IRB will evaluate whether these protections are adequate.",
-                    options: [
-                        { label: "Yes - outputs must be confirmed by standard clinical procedures before any action is taken", next: "nsr_with_mitigation", value: "mitigation" },
-                        { label: "Yes - outputs are advisory only, with clear disclaimers and independent clinical oversight", next: "nsr_with_mitigation", value: "advisory" },
-                        { label: "No - outputs could directly influence clinical decisions without independent confirmation", next: "significant_risk", value: "no_mitigation" },
-                        { label: "Unsure - need guidance on what constitutes adequate risk mitigation", next: "risk_mitigation_guidance", value: "unsure" }
-                    ]
-                },
-                risk_mitigation_guidance: {
-                    question: "Understanding Risk Mitigation for Device Studies",
-                    info: "Risk mitigation strategies can help classify a study as NSR even when outputs are visible to clinicians or patients:",
-                    details: [
-                        {
-                            title: "Adequate Risk Mitigation May Include",
-                            content: "Requiring all outputs to be confirmed by standard clinical procedures; treating outputs as advisory only with clear labeling; having independent clinical oversight review all outputs before they reach patients; ensuring the investigational device does not replace or override standard of care; implementing monitoring plans to detect any safety issues."
-                        },
-                        {
-                            title: "What the IRB Will Evaluate",
-                            content: "Whether the study design prevents the investigational device from directly influencing patient care; whether adequate safeguards exist to protect participants from potential harm; whether monitoring plans are sufficient to detect safety concerns; whether the risk mitigation strategies are documented in the protocol."
-                        },
-                        {
-                            title: "Key Principle",
-                            content: "The determination of SR vs. NSR depends on the specific study procedures and safeguards, not just the device's intended use. Work with your IRB to determine if your mitigation strategies are adequate."
-                        }
-                    ],
-                    options: [
-                        { label: "My study has adequate risk mitigation protocols", next: "nsr_with_mitigation", value: "yes" },
-                        { label: "My study does not have adequate risk mitigation", next: "significant_risk", value: "no" }
-                    ]
-                },
-                nsr_with_mitigation: {
-                    question: "Your study may qualify as NSR with proper risk mitigation",
-                    info: "Based on your responses, your study includes safeguards that may reduce the risk to NSR level. However, the final determination must be made by your IRB after reviewing your complete protocol.",
-                    details: [
-                        {
-                            title: "Important Note",
-                            content: "This is a preliminary assessment. Your IRB must review your specific study procedures, risk mitigation protocols, and monitoring plans to make the final SR/NSR determination."
-                        },
-                        {
-                            title: "What to Include in Your IRB Submission",
-                            content: "Detailed description of risk mitigation protocols; how outputs will be confirmed before any clinical action; monitoring and oversight procedures; clear documentation that the device will not replace standard of care; adverse event reporting plans."
-                        }
-                    ],
-                    options: [
-                        { label: "Continue to NSR determination", next: "irb_required_dev", value: "continue" }
-                    ]
-                },
-                clinical_evaluation_concept: {
-                    question: "A note about an important regulatory distinction",
-                    info: "There's a common misconception in the field that algorithm development doesn't require IRB review because 'there are no human subjects.' For medical device software, this isn't quite accurate. Here's why:",
-                    details: [
-                        {
-                            title: "Clinical Investigation",
-                            content: "This refers specifically to testing in human subjects to determine safety and effectiveness."
-                        },
-                        {
-                            title: "Clinical Evaluation (IMDRF/FDA framework)",
-                            content: "This is broader—it covers 'ongoing activities' throughout the product lifecycle, including establishing scientific validity (valid clinical association), technical testing (analytical validation), and demonstrating real-world performance (clinical validation)."
-                        },
-                        {
-                            title: "What This Means for Your Work",
-                            content: "Even during algorithm development and training, you're conducting clinical evaluation activities. For medical devices, IRB review applies to clinical evaluation work, not just clinical investigation phases. This is outlined in the FDA-adopted IMDRF SaMD Clinical Evaluation guidance."
-                        }
-                    ],
-                    options: [
-                        { label: "Got it, let's continue", next: "irb_required_dev", value: "proceed" }
-                    ]
-                },
-                irb_required_dev: {
-                    question: "In your study, could the software's outputs be seen by clinicians or patients, or influence clinical decisions (directly or indirectly)?",
-                    info: "This is the study-specific risk determination under 21 CFR 812.3(m). The key question is whether the investigational device could influence clinical care in your study, not just whether it could theoretically cause harm.",
-                    options: [
-                        { label: "No - outputs are not visible to anyone providing or receiving care (development/validation only)", next: "nsr_determination", value: "no" },
-                        { label: "Yes, but with adequate risk mitigation protocols in place", next: "irb_final_determination", value: "yes_mitigated" },
-                        { label: "Yes, outputs could influence care without independent confirmation", next: "significant_risk", value: "yes_unmitigated" }
-                    ]
-                },
-                irb_final_determination: {
-                    question: "Note: Your IRB will make the final determination",
-                    info: "Studies where outputs are visible but have risk mitigation protocols may be classified as either NSR or SR depending on the specific safeguards and the IRB's assessment.",
-                    details: [
-                        {
-                            title: "Factors the IRB Will Consider",
-                            content: "Adequacy of risk mitigation protocols; whether outputs must be confirmed by standard procedures; monitoring and oversight plans; potential consequences if outputs are incorrect; whether the device could influence treatment decisions; adequacy of informed consent and patient protections."
-                        },
-                        {
-                            title: "Possible Outcomes",
-                            content: "NSR if safeguards are adequate: The IRB may determine your study is NSR if the risk mitigation protocols effectively prevent the device from directly influencing patient care. SR if safeguards are insufficient: The IRB may determine your study is SR if there's potential for the device to influence care in ways that could cause serious harm, even with mitigation protocols."
-                        },
-                        {
-                            title: "What You Should Do",
-                            content: "Submit a comprehensive protocol detailing all risk mitigation strategies; be prepared to discuss and potentially enhance your safeguards; work collaboratively with your IRB to determine the appropriate classification."
-                        }
-                    ],
-                    options: [
-                        { label: "I understand - my IRB will make the final determination", next: "nsr_determination", value: "understand" }
-                    ]
-                },
-                nsr_determination: {
-                    conclusion: true,
-                    result: {
-                        type: "nsr",
-                        title: "Your Study May Qualify as Nonsignificant Risk (NSR)",
-                        requirements: [
-                            "Device classification: Medical device (based on intended use)",
-                            "Study risk level: NSR (determined by your specific study procedures and safeguards)",
-                            "IRB review: Required under 21 CFR 56 for clinical evaluation activities",
-                            "IDE pathway: Abbreviated IDE requirements per 21 CFR 812.2(b)",
-                            "FDA submission: Not required (NSR studies are automatically granted IDE status when abbreviated requirements are met)"
-                        ],
-                        next_steps: [
-                            "Submit your protocol to the IRB with a detailed risk determination worksheet explaining why the study is NSR",
-                            "If outputs are visible to participants, clearly document all risk mitigation protocols and safeguards",
-                            "Meet the abbreviated IDE requirements: proper labeling, monitoring plan, and recordkeeping per 21 CFR 812.2(b)",
-                            "Be prepared to discuss your risk mitigation strategies with the IRB—they may request additional safeguards",
-                            "Plan ahead for when you move to later phases—those will likely require re-evaluation",
-                            "Consider requesting a pre-submission meeting with the FDA Digital Health Center of Excellence to discuss your development pathway"
-                        ],
-                        considerations: [
-                            "IMPORTANT: This is a preliminary assessment. Your IRB makes the final SR/NSR determination based on your complete protocol and specific safeguards",
-                            "If your study includes visible outputs with risk mitigation, the IRB will carefully evaluate whether those safeguards are adequate",
-                            "When you move to patient deployment phases without adequate safeguards, the study will likely be reclassified as Significant Risk",
-                            "Even though full Quality System Regulations (21 CFR 820) aren't required yet, many developers find it helpful to start implementing compatible practices early",
-                            "Keep detailed documentation of your development, validation, and risk mitigation work—it will support your eventual regulatory submission"
-                        ]
-                    },
-                    options: [
-                        { label: "Start over with a different scenario", next: "start", value: "restart" }
-                    ]
-                },
-                significant_risk: {
-                    conclusion: true,
-                    result: {
-                        type: "sr",
-                        title: "Your Study is Classified as Significant Risk (SR)",
-                        requirements: [
-                            "Device classification: Medical device (based on intended use)",
-                            "Study risk level: SR (participants exposed to device outputs)",
-                            "IRB review: Required under 21 CFR 56",
-                            "IDE pathway: Full IDE application per 21 CFR 812",
-                            "FDA submission: Required before study initiation—both IRB and FDA must approve"
-                        ],
-                        next_steps: [
-                            "Prepare a comprehensive IDE application for FDA submission",
-                            "Submit to your IRB—note that you cannot begin the study until you have both IRB and FDA approval",
-                            "Develop detailed monitoring and safety protocols appropriate for the risk level",
-                            "Establish clear procedures for adverse event identification and reporting",
-                            "Implement Quality System Regulations (21 CFR 820) as these apply to SR device studies"
-                        ],
-                        considerations: [
-                            "SR classification indicates potential for serious harm, which is why FDA approval is required",
-                            "The IDE application process typically takes several months—plan your timeline accordingly",
-                            "FDA offers pre-submission meetings to discuss your IDE application strategy—these are often very helpful",
-                            "You may want to consult with regulatory affairs specialists experienced in digital health IDEs"
-                        ]
-                    },
-                    options: [
-                        { label: "Start over with a different scenario", next: "start", value: "restart" }
-                    ]
-                },
-                not_device: {
-                    conclusion: true,
-                    result: {
-                        type: "not_device",
-                        title: "Your Software is Not Classified as a Medical Device",
-                        details: [
-                            "Based on your responses, your software doesn't meet the regulatory definition of a medical device",
-                            "FDA device regulations (21 CFR 812) don't apply to your project",
-                            "However, if your research involves human subjects, the Common Rule (45 CFR 46) may still apply",
-                            "We recommend checking with your IRB about human subjects research requirements for your specific project"
-                        ]
-                    },
-                    options: [
-                        { label: "Start over", next: "start", value: "restart" }
-                    ]
-                },
-                not_samd: {
-                    conclusion: true,
-                    result: {
-                        type: "not_samd",
-                        title: "Your Software Doesn't Qualify as SaMD",
-                        details: [
-                            "Your software doesn't meet the criteria for Software as a Medical Device",
-                            "This decision tool focuses specifically on SaMD regulatory requirements",
-                            "Your software may be regulated under different frameworks depending on its purpose",
-                            "For guidance on your specific situation, consider consulting with a regulatory affairs specialist"
-                        ]
-                    },
-                    options: [
-                        { label: "Start over", next: "start", value: "restart" }
-                    ]
-                }
-            };
+/* ── human-readable step labels for IRB summary ── */
+const STEP_LABELS = {
+  start: 'Is your software standalone software designed for medical purposes?',
+  samd_check: 'Which of these best describes what your software does?',
+  medical_purpose: "Could this qualify as a 'general wellness' product?",
+  general_wellness_check: 'General wellness disqualifier screening',
+  intended_use: 'Who will use the software and how?',
+  hcp_cds_check: 'Does your software meet all four CDS exclusion criteria?',
+  cds_criteria_detail: 'Criteria 3 & 4 detail review',
+  is_device: 'IDE exemption screening',
+  exemption_check: 'Exemption criteria sub-questions',
+  study_procedures: 'What activities are planned for your current study phase?',
+  risk_mitigation_check: 'Does your study include risk mitigation protocols?',
+  risk_mitigation_guidance: 'Risk mitigation guidance reviewed',
+  nsr_with_mitigation: 'NSR with mitigation acknowledged',
+  clinical_evaluation_concept: 'Clinical evaluation regulatory distinction acknowledged',
+  irb_required_dev: 'Could software outputs influence clinical decisions?',
+  irb_final_determination: 'IRB final determination acknowledged',
+  sr_device_risk: 'SR device risk prong assessment',
+};
 
-            const handleAnswer = (option) => {
-                setHistory([...history, { step: currentStep, answer: option }]);
-                setAnswers({ ...answers, [currentStep]: option });
-                setCurrentStep(option.next);
-            };
+/* ── IRB Summary (formerly "audit record") ── */
+const IRBSummary = ({ history }) => {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const timeStr = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  const last = history[history.length-1];
+  const outcome = last ? last.answer.label : 'N/A';
 
-            const handleReset = () => {
-                setCurrentStep('start');
-                setHistory([]);
-                setAnswers({});
-            };
+  return (
+    <div className="print-wrap bg-white rounded-xl border border-slate-200 shadow-sm p-8 mt-6 space-y-6">
+      {/* header */}
+      <div className="flex items-start justify-between border-b-2 border-slate-800 pb-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest brand-text mb-1">TechInHSR LLC</p>
+          <h2 className="serif text-2xl text-slate-900">SaMD Regulatory Pathway Navigator</h2>
+          <p className="text-sm text-slate-500 mt-1">IRB Submission Summary (Self-Reported)</p>
+        </div>
+        <div className="text-right text-xs text-slate-400 leading-relaxed">
+          <p className="font-medium">{dateStr}</p><p>{timeStr}</p>
+        </div>
+      </div>
 
-            const handleBack = () => {
-                if (history.length > 0) {
-                    const newHistory = [...history];
-                    const lastStep = newHistory.pop();
-                    setHistory(newHistory);
-                    setCurrentStep(lastStep.step);
-                    
-                    const newAnswers = { ...answers };
-                    delete newAnswers[lastStep.step];
-                    setAnswers(newAnswers);
-                }
-            };
+      {/* disclaimer */}
+      <div className="bg-amber-50 border border-amber-300 rounded-lg p-4">
+        <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide mb-1">Important: Read Before Using This Document</p>
+        <p className="text-sm text-amber-900 leading-relaxed">
+          This summary records responses entered by the study team using the TechInHSR SaMD Regulatory Pathway Navigator.
+          All responses are <strong>self-reported</strong> and have not been reviewed or validated by TechInHSR LLC, the FDA, or any regulatory authority.
+          The preliminary pathway indicated below does not constitute a regulatory determination.
+          This document is intended solely to support IRB initial review and institutional record-keeping.
+        </p>
+      </div>
 
-            const currentNode = decisionTree[currentStep];
+      {/* outcome */}
+      <div className="bg-slate-50 rounded-lg border border-slate-200 p-4">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Preliminary Pathway Indicated</p>
+        <p className="text-base font-semibold text-slate-900">{outcome}</p>
+      </div>
 
-            return (
-                <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-                    {/* Header */}
-                    <div className="bg-white border-b border-slate-200 shadow-sm">
-                        <div className="max-w-4xl mx-auto px-6 py-8">
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                                        SaMD Regulatory Pathway Navigator
-                                    </h1>
-                                    <p className="text-slate-600 text-lg">
-                                        A guide to help you navigate medical device software regulations
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={handleReset}
-                                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-                                >
-                                    <RefreshCw />
-                                    Start Over
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+      {/* response log */}
+      <div>
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Complete Response Record</p>
+        <div className="divide-y divide-slate-100 border border-slate-200 rounded-lg overflow-hidden">
+          {history.map((entry,i) => (
+            <div key={i} className="grid grid-cols-12 gap-3 px-4 py-3 text-sm">
+              <div className="col-span-1 text-slate-400 font-mono text-xs pt-0.5">Q{i+1}</div>
+              <div className="col-span-7 text-slate-600">{STEP_LABELS[entry.step]||entry.step}</div>
+              <div className="col-span-4 text-slate-900 font-medium">{entry.answer.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-                    {/* Progress */}
-                    {history.length > 0 && (
-                        <div className="max-w-4xl mx-auto px-6 py-4">
-                            <div className="flex items-center gap-2 text-sm text-slate-500">
-                                <span>Step {history.length + 1}</span>
-                                <span>•</span>
-                                <button
-                                    onClick={handleBack}
-                                    className="text-indigo-600 hover:text-indigo-700 font-medium"
-                                >
-                                    ← Go back
-                                </button>
-                            </div>
-                        </div>
-                    )}
+      {/* signature block */}
+      <div className="grid grid-cols-2 gap-8 border-t border-slate-200 pt-6">
+        <div>
+          <p className="text-xs text-slate-500 mb-5">Study team representative signature</p>
+          <div className="border-b border-slate-400 h-8 mb-1"></div>
+          <p className="text-xs text-slate-400">Signature / Date</p>
+        </div>
+        <div>
+          <p className="text-xs text-slate-500 mb-5">Printed name and role</p>
+          <div className="border-b border-slate-400 h-8 mb-1"></div>
+          <p className="text-xs text-slate-400">Name / Title</p>
+        </div>
+      </div>
 
-                    {/* Main Content */}
-                    <div className="max-w-4xl mx-auto px-6 py-8">
-                        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden fade-in">
-                            {/* Question */}
-                            <div className="p-8 border-b border-slate-100">
-                                <h2 className="text-2xl font-bold text-slate-900 mb-4">
-                                    {currentNode.question}
-                                </h2>
-                                
-                                {currentNode.info && (
-                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                                        <div className="flex gap-3">
-                                            <div className="flex-shrink-0 mt-0.5 text-blue-600">
-                                                <InfoIcon />
-                                            </div>
-                                            <p className="text-blue-900 text-sm leading-relaxed">
-                                                {currentNode.info}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
+      <p className="text-center text-xs text-slate-400 border-t border-slate-100 pt-4">
+        Generated by TechInHSR SaMD Regulatory Pathway Navigator · techinhsr.com<br/>
+        Based on 21 CFR 56, 21 CFR 812, and FDA/IMDRF SaMD Clinical Evaluation Guidance · Tamiko Eto, MA, CIP
+      </p>
+    </div>
+  );
+};
 
-                                {currentNode.details && (
-                                    <div className="space-y-4 mb-6">
-                                        {currentNode.details.map((detail, idx) => (
-                                            <div key={idx} className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                                                <h3 className="font-semibold text-slate-900 mb-2">{detail.title}</h3>
-                                                <p className="text-slate-700 text-sm leading-relaxed">{detail.content}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
+/* ══════════════════════════════════════════════════
+   MAIN COMPONENT
+══════════════════════════════════════════════════ */
+const App = () => {
+  const [step, setStep] = useState('start');
+  const [history, setHistory] = useState([]);
+  const [showSummary, setShowSummary] = useState(false);
 
-                                {currentNode.criteria && (
-                                    <div className="bg-slate-50 rounded-lg p-4 mb-6 border border-slate-200">
-                                        <ul className="space-y-2">
-                                            {currentNode.criteria.map((criterion, idx) => (
-                                                <li key={idx} className="flex gap-2 text-sm text-slate-700">
-                                                    <div className="flex-shrink-0 mt-0.5 text-green-600">
-                                                        <CheckCircle />
-                                                    </div>
-                                                    <span>{criterion}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
+  const go = (option) => {
+    const next = option.next;
+    setHistory(h => [...h, { step, answer: option }]);
+    if (next === '__reset__') { reset(); return; }
+    setStep(next);
+    setShowSummary(false);
+  };
 
-                                {currentNode.disqualifiers && (
-                                    <div className="bg-amber-50 rounded-lg p-4 mb-6 border border-amber-200">
-                                        <ul className="space-y-2">
-                                            {currentNode.disqualifiers.map((item, idx) => (
-                                                <li key={idx} className="flex gap-2 text-sm text-amber-900">
-                                                    <div className="flex-shrink-0 mt-0.5 text-amber-600">
-                                                        <AlertCircle />
-                                                    </div>
-                                                    <span>{item}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                            </div>
+  const back = () => {
+    if (!history.length) return;
+    const prev = [...history];
+    const last = prev.pop();
+    setHistory(prev);
+    setStep(last.step);
+    setShowSummary(false);
+  };
 
-                            {/* Options/Results */}
-                            {currentNode.conclusion ? (
-                                <div className="p-8">
-                                    <div className={`rounded-xl p-6 mb-6 border ${
-                                        currentNode.result.type === 'nsr' ? 'bg-green-50 border-green-200' :
-                                        currentNode.result.type === 'sr' ? 'bg-blue-50 border-blue-200' :
-                                        currentNode.result.type === 'device' ? 'bg-blue-50 border-blue-200' :
-                                        currentNode.result.type === 'general_wellness' ? 'bg-green-50 border-green-200' :
-                                        'bg-slate-50 border-slate-200'
-                                    }`}>
-                                        <h3 className="text-xl font-bold mb-4 text-slate-900">
-                                            {currentNode.result.title}
-                                        </h3>
+  const reset = () => { setStep('start'); setHistory([]); setShowSummary(false); };
 
-                                        {currentNode.result.details && (
-                                            <ul className="space-y-2 mb-4">
-                                                {currentNode.result.details.map((detail, idx) => (
-                                                    <li key={idx} className="flex gap-2 text-sm text-slate-700">
-                                                        <div className="flex-shrink-0 mt-0.5">
-                                                            <ChevronRight />
-                                                        </div>
-                                                        <span>{detail}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        )}
+  /* ── TREE ── */
+  const T = {
+    /* ─── 1. SaMD check ─── */
+    start: {
+      q: "Is your software standalone software designed for medical purposes?",
+      hint: "SaMD = standalone software with a medical purpose. It runs independently, not embedded inside hardware.",
+      opts: [
+        { label: "Yes, it is standalone and serves a medical purpose", next: 'medical_purpose' },
+        { label: "No, it is not standalone or has no medical purpose", next: 'not_samd' },
+        { label: "I'm not sure. Help me figure this out.", next: 'samd_check' },
+      ]
+    },
+    samd_check: {
+      q: "Which of these best describes what your software does?",
+      hint: "Medical purposes include: diagnosing, treating, or preventing disease; analyzing patient data to inform clinical decisions; triaging patients.",
+      opts: [
+        { label: "It performs at least one of those medical functions", next: 'medical_purpose' },
+        { label: "It doesn't perform those kinds of functions", next: 'not_samd' },
+      ]
+    },
 
-                                        {currentNode.result.requirements && (
-                                            <div className="mb-4">
-                                                <h4 className="font-semibold mb-2 text-slate-900">Regulatory Requirements:</h4>
-                                                <ul className="space-y-2">
-                                                    {currentNode.result.requirements.map((req, idx) => (
-                                                        <li key={idx} className="flex gap-2 text-sm text-slate-700">
-                                                            <div className="flex-shrink-0 mt-0.5 text-green-600">
-                                                                <CheckCircle />
-                                                            </div>
-                                                            <span>{req}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
+    /* ─── 2. General wellness ─── */
+    medical_purpose: {
+      q: "Could this be a 'general wellness' product?",
+      hint: "General wellness tools avoid device regulation, but only a narrow category qualifies. Let's check.",
+      opts: [
+        { label: "Maybe, let me check", next: 'general_wellness_check' },
+        { label: "No, it is clearly disease-specific clinical software", next: 'intended_use' },
+      ]
+    },
+    general_wellness_check: {
+      q: "Does your software do any of the following?",
+      hint: "If any of these apply, your software is NOT general wellness. It is a medical device.",
+      disqualifiers: [
+        "Uses individual patient data to generate personalized recommendations",
+        "Provides risk scores or probability for a specific disease",
+        "Identifies individual risk factors based on clinical assessment",
+        "Prompts or guides specific clinical actions or treatment",
+        "Screens for, monitors, or manages a disease",
+        "References specific diseases with clinical thresholds or diagnostic criteria",
+      ],
+      opts: [
+        { label: "Yes, one or more of these apply", next: 'not_general_wellness' },
+        { label: "No, none of these apply", next: 'general_wellness_qualified' },
+      ]
+    },
+    not_general_wellness: {
+      q: "Your software does not qualify as general wellness",
+      body: [
+        { kind:'info', color:'amber', icon:'warn', text: "FDA's general wellness policy covers only low-risk, population-level health promotion tools. It does not cover software that uses clinical data to assess individual disease risk or guide clinical management." },
+        { kind:'compare', label:'Key distinction',
+          pass: '"Exercise 30 minutes daily for heart health." Population-level advice with no individual assessment.',
+          fail: '"Based on your blood pressure and glucose, your 10-year cardiac risk is 24%, here are personalized recommendations." Individual clinical assessment = medical device.' },
+      ],
+      opts: [{ label: "Understood. Continue to device classification.", next: 'intended_use' }]
+    },
 
-                                        {currentNode.result.next_steps && (
-                                            <div className="mb-4">
-                                                <h4 className="font-semibold mb-2 text-slate-900">Recommended Next Steps:</h4>
-                                                <ul className="space-y-2">
-                                                    {currentNode.result.next_steps.map((step, idx) => (
-                                                        <li key={idx} className="flex gap-2 text-sm text-slate-700">
-                                                            <div className="flex-shrink-0 mt-1">
-                                                                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-medium">
-                                                                    {idx + 1}
-                                                                </span>
-                                                            </div>
-                                                            <span>{step}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
+    /* ─── 3. Intended use ─── */
+    intended_use: {
+      q: "Who will use the software and how?",
+      hint: "Think about the end product's intended use, not just your current study design.",
+      opts: [
+        { label: "Patients, to get personalized medical advice or education", next: 'patient_facing_device' },
+        { label: "Healthcare professionals (HCPs), to help make clinical decisions", next: 'hcp_cds_check' },
+        { label: "Administrative or non-clinical purposes only", next: 'not_device' },
+      ]
+    },
 
-                                        {currentNode.result.considerations && (
-                                            <div className="bg-slate-100 border border-slate-300 rounded-lg p-4 mt-4">
-                                                <h4 className="font-semibold mb-2 text-slate-900 flex items-center gap-2">
-                                                    <div className="flex-shrink-0 text-slate-600">
-                                                        <InfoIcon />
-                                                    </div>
-                                                    Additional Considerations:
-                                                </h4>
-                                                <ul className="space-y-1 text-sm text-slate-700">
-                                                    {currentNode.result.considerations.map((item, idx) => (
-                                                        <li key={idx} className="flex gap-2">
-                                                            <span className="flex-shrink-0">•</span>
-                                                            <span>{item}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-                                    </div>
+    /* ─── 4. CDS exclusion ─── */
+    hcp_cds_check: {
+      q: "Does your software meet all four CDS exclusion criteria?",
+      hint: "Under the 21st Century Cures Act, certain HCP-facing clinical decision support (CDS) software is excluded from device regulation. All four criteria must be met.",
+      criteria: [
+        "Does NOT acquire, process, or analyze medical images or signals from diagnostic devices",
+        "Displays or analyzes medical information (patient data, clinical guidelines, research studies)",
+        "Supports HCPs (they make the final clinical decisions, not the software)",
+        "Allows HCPs to independently review the basis for the software's recommendations",
+      ],
+      cdsWarn: true,
+      opts: [
+        { label: "Yes, it meets all four criteria", next: 'not_device' },
+        { label: "No, it fails at least one criterion", next: 'is_device' },
+        { label: "I'm not sure about criteria 3 or 4. Walk me through them.", next: 'cds_criteria_detail' },
+      ]
+    },
+    cds_criteria_detail: {
+      q: "Let's work through criteria 3 and 4",
+      hint: "These two criteria are the most commonly misread. 'The doctor makes the final call' is not enough for criterion 3. 'The output is visible' is not enough for criterion 4.",
+      cdsDetail: true,
+      opts: [
+        { label: "My software meets both criteria 3 and 4", next: 'not_device' },
+        { label: "My software fails one or both criteria", next: 'is_device' },
+      ]
+    },
 
-                                    <div className="flex gap-3">
-                                        {currentNode.options.map((option, idx) => (
-                                            <button
-                                                key={idx}
-                                                onClick={() => handleAnswer(option)}
-                                                className="flex-1 px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
-                                            >
-                                                {option.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="p-8">
-                                    <div className="space-y-3">
-                                        {currentNode.options.map((option, idx) => (
-                                            <button
-                                                key={idx}
-                                                onClick={() => handleAnswer(option)}
-                                                className="w-full text-left p-4 border-2 border-slate-200 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 transition-all group"
-                                            >
-                                                <div className="flex items-center justify-between">
-                                                    <span className="font-medium text-slate-900 group-hover:text-indigo-900">
-                                                        {option.label}
-                                                    </span>
-                                                    <div className="text-slate-400 group-hover:text-indigo-600">
-                                                        <ChevronRight />
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+    /* ─── 5. IDE exemption ─── */
+    is_device: {
+      q: "Does your study qualify for an IDE exemption?",
+      hint: "Not all device studies need a full IDE application. FDA's 21 CFR 812.2(c) lists specific exemptions, but you need to know which one applies and why.",
+      exemptionIntro: true,
+      opts: [
+        { label: "Help me check the exemption criteria", next: 'exemption_check' },
+        { label: "I've already confirmed an exemption applies", next: 'exempt_device' },
+        { label: "No exemption applies. My study is a full device investigation.", next: 'study_procedures' },
+      ]
+    },
+    exemption_check: {
+      q: "Which of the following best describes your device?",
+      hint: "Each of these is a distinct exemption category under 21 CFR 812.2(c). Only check the one that genuinely applies.",
+      exemptionChecklist: true,
+      opts: [
+        { label: "My device fits one of the categories above", next: 'exempt_device' },
+        { label: "None of these apply to my device", next: 'study_procedures' },
+        { label: "I need to confirm with my IRB before deciding", next: 'study_procedures' },
+      ]
+    },
 
-                        {/* Footer */}
-                        <div className="mt-8 text-center text-sm text-slate-500 space-y-1">
-                            <p>
-                                Based on 21 CFR 56, 812 and FDA/IMDRF SaMD Clinical Evaluation Guidance
-                            </p>
-                            <p>
-                                Created by Tamiko Eto, MA, CIP | TechInHSR LLC
-                            </p>
-                            <p>
-                                <a href="https://techinshsr.com" className="text-indigo-600 hover:underline">techinshsr.com</a>
-                            </p>
-                        </div>
-                    </div>
+    /* ─── 6. Study procedures ─── */
+    study_procedures: {
+      q: "What activities are planned for your current study phase?",
+      hint: "IDE requirements depend on what's happening in your study, specifically whether device outputs could reach or influence clinical care.",
+      opts: [
+        { label: "Algorithm development or training using synthetic or de-identified data only, with no patient care involvement", next: 'clinical_evaluation_concept' },
+        { label: "Testing where outputs are visible to clinicians or patients and could influence care decisions", next: 'risk_mitigation_check' },
+        { label: "Outputs generated but kept strictly internal, not shared with anyone providing or receiving care", next: 'clinical_evaluation_concept' },
+      ]
+    },
+
+    /* ─── 7. Risk mitigation ─── */
+    risk_mitigation_check: {
+      q: "Does your study include risk mitigation protocols?",
+      hint: "Study risk level (SR vs NSR) depends on what safeguards are in place, not just whether outputs are visible.",
+      opts: [
+        { label: "Yes, outputs must be confirmed by standard clinical procedures before any clinical action", next: 'nsr_with_mitigation' },
+        { label: "Yes, outputs are advisory only, with clear disclaimers and independent clinical oversight", next: 'nsr_with_mitigation' },
+        { label: "No, outputs could directly influence clinical decisions without independent confirmation", next: 'sr_device_risk' },
+        { label: "I'm not sure what counts as adequate mitigation", next: 'risk_mitigation_guidance' },
+      ]
+    },
+    risk_mitigation_guidance: {
+      q: "What counts as adequate risk mitigation?",
+      hint: "These safeguards can support an NSR determination even when device outputs are visible.",
+      mitigationDetail: true,
+      opts: [
+        { label: "My study includes adequate risk mitigation", next: 'nsr_with_mitigation' },
+        { label: "My study does not include adequate risk mitigation", next: 'sr_device_risk' },
+      ]
+    },
+
+    /* ─── 8. SR prong check ─── */
+    sr_device_risk: {
+      q: "Does your device fall into any of these categories?",
+      hint: "Under 21 CFR 812.3(m), a device is Significant Risk if it meets one of these four prongs AND presents a potential for serious risk to subject health, safety, or welfare.",
+      srProngs: true,
+      opts: [
+        { label: "Yes, my device meets one or more of these AND could cause serious harm to subjects", next: 'significant_risk' },
+        { label: "No, my device does not meet any of these prongs, or does not present serious risk potential", next: 'nsr_determination' },
+        { label: "I'm not sure. I need to review this with my IRB.", next: 'sr_irb_review' },
+      ]
+    },
+    sr_irb_review: {
+      q: "Your IRB will make the final SR/NSR determination",
+      hint: "The sponsor makes an initial determination and presents it to the IRB. The IRB reviews it and makes the binding decision. FDA's determination, if any, is final.",
+      body: [
+        { kind:'list', label:'What to bring to your IRB', items:[
+          'Your written SR/NSR determination with rationale',
+          'Device description and intended use in the study',
+          'Description of study procedures and who will see device outputs',
+          'Any risk mitigation protocols you have in place',
+          'Reference to applicable prongs of 21 CFR 812.3(m)',
+        ]},
+      ],
+      opts: [
+        { label: "I will present this to my IRB for determination.", next: 'nsr_determination' },
+      ]
+    },
+
+    nsr_with_mitigation: {
+      q: "Your study may qualify as NSR with proper risk mitigation",
+      hint: "This is a preliminary assessment. Your IRB makes the final SR/NSR determination after reviewing your complete protocol.",
+      body: [
+        { kind:'list', label:'Include in your IRB submission', items:[
+          'Detailed description of risk mitigation protocols',
+          'How outputs will be confirmed before any clinical action',
+          'Monitoring and oversight procedures',
+          'Documentation that the device will not replace standard of care',
+          'Adverse event reporting plan',
+        ]},
+      ],
+      opts: [{ label: "Continue to NSR determination", next: 'irb_required_dev' }]
+    },
+
+    clinical_evaluation_concept: {
+      q: "A note on IRB review for early-phase device work",
+      hint: "A common misconception: 'We're just developing the algorithm, so IRB review doesn't apply because there are no human subjects.' That's not accurate for medical device software.",
+      body: [
+        { kind:'compare', label:'Clinical investigation vs. clinical evaluation',
+          pass: 'Clinical evaluation (IMDRF/FDA): broader in scope, covering the full product lifecycle including establishing scientific validity, analytical validation, and clinical validation. IRB review applies here.',
+          fail: 'Clinical investigation: testing in human subjects to determine safety and effectiveness. This is the narrower concept most people think of when they hear "IRB review."' },
+        { kind:'info', color:'teal', icon:'info', text: 'Even during algorithm development using de-identified data, you are conducting clinical evaluation activities. IRB review applies to clinical evaluation work under the FDA-adopted IMDRF SaMD Clinical Evaluation guidance, not just clinical investigation phases.' },
+      ],
+      opts: [{ label: "Understood. Let's continue.", next: 'irb_required_dev' }]
+    },
+
+    irb_required_dev: {
+      q: "Could your software's outputs be seen by clinicians or patients, or influence clinical decisions?",
+      hint: "This is the study-specific risk question under 21 CFR 812.3(m). The key is whether the device could influence care in your study, not just in theory. Note: if any output is entered into a patient's medical record, that counts as visible to clinicians and as having potential to influence clinical decisions, even if no one acts on it immediately.",
+      opts: [
+        { label: "No, outputs are not visible to anyone providing or receiving care and are not entered into any medical record", next: 'nsr_determination' },
+        { label: "Yes (including if outputs are entered into the medical record), but with documented risk mitigation protocols", next: 'irb_final_determination' },
+        { label: "Yes, outputs could influence care without independent confirmation", next: 'sr_device_risk' },
+      ]
+    },
+    irb_final_determination: {
+      q: "Your IRB will make the final SR/NSR call",
+      hint: "Studies with visible outputs but documented mitigation may be NSR or SR depending on your specific safeguards.",
+      body: [
+        { kind:'list', label:'Factors the IRB will weigh', items:[
+          'Adequacy of your risk mitigation protocols',
+          'Whether outputs must be confirmed before clinical action',
+          'Monitoring and oversight plans',
+          'Potential consequences if outputs are incorrect',
+          'Adequacy of informed consent',
+        ]},
+      ],
+      opts: [{ label: "Understood. My IRB will make the final determination.", next: 'nsr_determination' }]
+    },
+
+    /* ═══ CONCLUSIONS ═══ */
+    general_wellness_qualified: {
+      conclusion: true,
+      badge: { color:'green', text:'General Wellness' },
+      q: "Your product may qualify as general wellness",
+      details: [
+        "FDA's general wellness enforcement discretion may apply if your software truly provides only population-level health education without disease-specific risk assessment.",
+        "General wellness products must be low-risk and for maintaining general health only.",
+        "Even qualifying products must comply with FTC advertising rules and HIPAA if handling health data.",
+        "Review FDA's 2026 General Wellness Guidance to confirm your classification before relying on this pathway.",
+      ],
+      opts: [{ label: "Start over with a different scenario", next: '__reset__' }]
+    },
+    patient_facing_device: {
+      conclusion: true,
+      badge: { color:'amber', text:'Medical Device (Patient-Facing)' },
+      q: "Your software is classified as a medical device",
+      details: [
+        "Patient-facing software that provides personalized medical recommendations is regulated as a device under FDA's 2022 CDS Guidance (updated 2026).",
+        "The CDS exclusion applies only to HCP-facing tools, not patient-facing software.",
+      ],
+      next_steps: [
+        "Continue to determine your study's IDE requirements",
+        "Identify your device risk level (SR vs NSR) based on your study procedures",
+        "Prepare your IRB submission with a device classification rationale",
+      ],
+      opts: [{ label: "Continue to determine study requirements", next: 'study_procedures' }]
+    },
+    exempt_device: {
+      conclusion: true,
+      badge: { color:'teal', text:'IDE Exempt' },
+      q: "Your device study qualifies for IDE exemption",
+      details: [
+        "Your device meets one of the exemption categories under 21 CFR 812.2(c). A full IDE application is not required.",
+        "IRB review is still required under 21 CFR 56, even for exempt device studies.",
+        "Document your exemption basis clearly in your IRB submission. Specify which exemption category applies and why.",
+        "Confirm your exemption determination with your IRB before proceeding.",
+      ],
+      opts: [{ label: "Start over", next: '__reset__' }]
+    },
+    nsr_determination: {
+      conclusion: true,
+      badge: { color:'teal', text:'Likely NSR' },
+      q: "Your study may qualify as Nonsignificant Risk (NSR)",
+      requirements: [
+        "Device classification: Medical device",
+        "Study risk level: NSR (preliminary, subject to IRB confirmation)",
+        "IRB review: Required under 21 CFR 56",
+        "IDE pathway: Abbreviated IDE per 21 CFR 812.2(b)",
+        "FDA submission: Not required for NSR. IRB approval is sufficient.",
+      ],
+      next_steps: [
+        "Submit your protocol to the IRB with a written SR/NSR determination and rationale",
+        "Document all risk mitigation protocols if device outputs will be visible to participants",
+        "Meet abbreviated IDE requirements: labeling, monitoring plan, recordkeeping, informed consent (21 CFR 812.2(b))",
+        "Be prepared to enhance safeguards if the IRB requests them",
+        "Plan for re-evaluation when moving to deployment phases, as risk level may change",
+        "Consider a pre-submission meeting with FDA's Digital Health Center of Excellence",
+      ],
+      considerations: [
+        "This is a preliminary assessment. Your IRB makes the binding SR/NSR determination.",
+        "Quality System Regulations (21 CFR 820) are not required for NSR studies, but early adoption of compatible practices can streamline later submissions.",
+        "Keep detailed records of development, validation, and risk mitigation. These will support your eventual premarket submission.",
+      ],
+      opts: [{ label: "Start over with a different scenario", next: '__reset__' }]
+    },
+    significant_risk: {
+      conclusion: true,
+      badge: { color:'red', text:'Significant Risk' },
+      q: "Your study is classified as Significant Risk (SR)",
+      requirements: [
+        "Device classification: Medical device",
+        "Study risk level: SR (meets one or more prongs of 21 CFR 812.3(m) with potential for serious harm)",
+        "IRB review: Required under 21 CFR 56",
+        "IDE pathway: Full IDE application per 21 CFR 812.20",
+        "FDA submission: Required. Both IRB and FDA must approve before the study begins.",
+      ],
+      next_steps: [
+        "Prepare a comprehensive IDE application for FDA submission",
+        "Do not begin the study until you have both IRB and FDA approval",
+        "Develop detailed monitoring and safety reporting protocols",
+        "Establish adverse event identification and reporting procedures",
+        "Implement Quality System Regulations (21 CFR 820), which apply to SR device studies",
+        "Request a pre-submission meeting with FDA to discuss your IDE strategy",
+      ],
+      considerations: [
+        "SR classification reflects potential for serious harm to subjects. FDA oversight is required as a result.",
+        "The IDE application process typically takes several months. Build this into your timeline.",
+        "Consider engaging a regulatory affairs consultant with digital health IDE experience.",
+      ],
+      opts: [{ label: "Start over with a different scenario", next: '__reset__' }]
+    },
+    not_device: {
+      conclusion: true,
+      badge: { color:'slate', text:'Not a Medical Device' },
+      q: "Your software is not classified as a medical device under this pathway",
+      details: [
+        "Based on your responses, your software meets the 21st Century Cures Act CDS exclusion. FDA device regulations (21 CFR 812) do not apply.",
+        "If your research involves human subjects, the Common Rule (45 CFR 46) may still apply regardless of device classification.",
+        "Confirm with your IRB whether human subjects research review is required for your specific project.",
+      ],
+      opts: [{ label: "Start over", next: '__reset__' }]
+    },
+    not_samd: {
+      conclusion: true,
+      badge: { color:'slate', text:'Not SaMD' },
+      q: "Your software doesn't qualify as SaMD",
+      details: [
+        "Your software doesn't meet the criteria for Software as a Medical Device.",
+        "This tool focuses on SaMD. Other regulatory frameworks may apply depending on your software's purpose.",
+        "Consult a regulatory affairs specialist if you're unsure which framework governs your software.",
+      ],
+      opts: [{ label: "Start over", next: '__reset__' }]
+    },
+  };
+
+  const node = T[step] || T['start'];
+  const isConclusion = !!node.conclusion;
+
+  /* ── RENDER BODY BLOCKS ── */
+  const renderBody = (body=[]) => body.map((b,i) => {
+    if (b.kind==='info') return <InfoBox key={i} color={b.color} icon={b.icon}>{b.text}</InfoBox>;
+    if (b.kind==='compare') return (
+      <div key={i}>
+        {b.label && <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">{b.label}</p>}
+        <ExamplePair pass={b.pass} fail={b.fail}/>
+      </div>
+    );
+    if (b.kind==='list') return (
+      <div key={i}>
+        {b.label && <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">{b.label}</p>}
+        <CheckList items={b.items}/>
+      </div>
+    );
+    return null;
+  });
+
+  /* ── RENDER ── */
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200">
+
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200 shadow-sm no-print">
+        <div className="max-w-3xl mx-auto px-5 py-6 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest brand-text mb-1">TechInHSR LLC</p>
+            <h1 className="serif text-2xl text-slate-900 leading-tight">SaMD Regulatory Pathway Navigator</h1>
+            <p className="text-sm text-slate-500 mt-1">Navigate medical device software regulations step by step</p>
+          </div>
+          <button onClick={reset} className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors">
+            <Icon.refresh/> Start over
+          </button>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      {history.length > 0 && (
+        <div className="max-w-3xl mx-auto px-5 pt-4 pb-1 no-print flex items-center gap-3 text-xs text-slate-500">
+          <span className="font-medium">Step {history.length + 1}</span>
+          <span>·</span>
+          <button onClick={back} className="brand-text font-semibold hover:underline">← Back</button>
+        </div>
+      )}
+
+      {/* Card */}
+      <div className="max-w-3xl mx-auto px-5 py-5 no-print">
+        <div className="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden fade-in">
+
+          {/* Question block */}
+          <div className="px-7 pt-7 pb-5 border-b border-slate-100 space-y-4">
+
+            {/* badge */}
+            {node.badge && <div><Pill color={node.badge.color}>{node.badge.text}</Pill></div>}
+
+            <h2 className="serif text-xl text-slate-900 leading-snug">{node.q}</h2>
+
+            {/* hint */}
+            {node.hint && <InfoBox color="teal" icon="info">{node.hint}</InfoBox>}
+
+            {/* disqualifiers */}
+            {node.disqualifiers && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <AlertList items={node.disqualifiers}/>
+              </div>
+            )}
+
+            {/* criteria list */}
+            {node.criteria && (
+              <div className="border border-slate-200 rounded-lg p-4 space-y-2">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">All four must apply:</p>
+                <CheckList items={node.criteria}/>
+              </div>
+            )}
+
+            {/* CDS criteria 3 and 4 detail: expandable panels */}
+            {node.cdsWarn && (
+              <InfoBox color="amber" icon="warn">
+                <strong>Criteria 3 and 4 are frequently misread.</strong> "The doctor makes the final call" is not sufficient for criterion 3. "The clinician can see the output" is not sufficient for criterion 4. If you have any doubt, select the third option below.
+              </InfoBox>
+            )}
+
+            {node.cdsDetail && (
+              <div className="space-y-2">
+                <Expand title="Criterion 3: What 'supports HCPs' actually requires">
+                  <p>It's not enough that a clinician is technically responsible for the final decision. The workflow must operationally enforce that the clinician reviews and independently confirms the output, not just receives it.</p>
+                  <p className="font-medium mt-2">Ask yourself:</p>
+                  <CheckList items={[
+                    "Does your system require clinicians to document that they reviewed the recommendation before acting?",
+                    "Is there a defined step where the clinician must confirm or override the output, not just see it?",
+                    "Are clinicians trained on automation bias (the tendency to accept algorithmic outputs without scrutiny)?",
+                    "If a clinician rubber-stamped every recommendation without reading the basis, would your protocol detect it?",
+                  ]}/>
+                  <ExamplePair
+                    pass="Clinicians must select Accept (with documented independent rationale), Modify, or Reject before the system records the decision. Monthly audits review all Accepts for unexplained uniformity as an automation bias check."
+                    fail="'Our clinicians see the recommendation and make the call.' No confirmation step, no automation bias training, no way to distinguish genuine review from rubber-stamping."
+                  />
+                </Expand>
+                <Expand title="Criterion 4: What 'independently review the basis' actually requires">
+                  <p>The clinician must be able to trace how the software reached its recommendation and verify it against their own clinical knowledge, not just see the output or a confidence score.</p>
+                  <p className="font-medium mt-2">Ask yourself:</p>
+                  <CheckList items={[
+                    "Can the clinician see which inputs the software used and how it weighted them?",
+                    "Is the underlying logic accessible in plain clinical language, not just a black-box score?",
+                    "Can the clinician verify the input data was accurate before acting on the recommendation?",
+                    "Is the model's reasoning explainable to a clinician, not just to a data scientist?",
+                  ]}/>
+                  <ExamplePair
+                    pass="The software shows a risk score with a ranked list of contributing factors, the source EHR data for each factor, a plain-language explanation of the model's logic, and a flag if any input data appears incomplete."
+                    fail="The software shows a risk score of 78/100 with a brief text summary. The clinician can see the score but cannot verify which data points drove it or whether the model's weighting is clinically sound."
+                  />
+                </Expand>
+              </div>
+            )}
+
+            {/* IDE exemption intro */}
+            {node.exemptionIntro && (
+              <div className="space-y-2">
+                <InfoBox color="amber" icon="warn">
+                  Don't assume an exemption applies without checking. The exemption categories are specific, and each has conditions that must be met. Select "Help me check" if you're unsure.
+                </InfoBox>
+                <Expand title="What are the exemption categories? (21 CFR 812.2(c))">
+                  <ul className="space-y-3 text-sm">
+                    <li><span className="font-semibold text-slate-800">Legally marketed device used per its labeling.</span> Has an approved PMA or 510(k) clearance AND is being used exactly as labeled. Does not apply if you're testing a new indication.</li>
+                    <li><span className="font-semibold text-slate-800">Noninvasive diagnostic device.</span> Must meet all four conditions: (1) noninvasive, (2) no invasive sampling with significant risk, (3) does not introduce energy into the subject, (4) not used as the sole diagnostic without confirmation by another medically established procedure. <span className="text-amber-700 font-medium">AI-specific note: if your tool represents a significant technological advance, existing procedures may not adequately confirm its outputs. See the detailed checklist below.</span></li>
+                    <li><span className="font-semibold text-slate-800">Consumer preference testing or modification testing.</span> Testing preferences or modifications of devices already in commercial distribution, when NOT testing safety or effectiveness and NOT putting subjects at risk.</li>
+                    <li><span className="font-semibold text-slate-800">Custom device.</span> Limited to ≤5 units/year of a device type, not being used to determine safety or effectiveness for commercial distribution. Annual FDA reporting required.</li>
+                    <li><span className="font-semibold text-slate-800">Veterinary or lab animal use only.</span> Solely for use on animals, not humans.</li>
+                  </ul>
+                  <InfoBox color="teal" icon="info">IRB review is still required even for exempt device studies. Document your exemption basis clearly in your submission.</InfoBox>
+                </Expand>
+              </div>
+            )}
+
+            {/* Exemption checklist */}
+            {node.exemptionChecklist && (
+              <div className="space-y-2">
+                <Expand title="Legally marketed device: conditions">
+                  <CheckList items={[
+                    "Your device has an approved PMA or 510(k) clearance",
+                    "You are using it exactly as described in its existing labeling",
+                    "You are NOT testing a new indication or a significant modification",
+                  ]}/>
+                  <InfoBox color="amber" icon="warn">If you're testing a new use, even for a cleared device, this exemption does not apply.</InfoBox>
+                </Expand>
+                <Expand title="Noninvasive diagnostic device: all four conditions required">
+                  <CheckList items={[
+                    "The device is noninvasive (does not pierce skin, mucous membranes, or enter body cavities)",
+                    "Does not require invasive sampling that presents significant risk",
+                    "Does not introduce energy into the subject",
+                    "Is NOT used as the sole diagnostic procedure (results must be confirmed by another medically established product or procedure)",
+                  ]}/>
+                  <InfoBox color="amber" icon="warn">All four conditions must be met. Failing any one means this exemption does not apply.</InfoBox>
+                  <div className="mt-3 border border-amber-200 rounded-lg p-3 bg-amber-50">
+                    <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide mb-2">Special consideration for AI tools</p>
+                    <p className="text-sm text-amber-900 leading-relaxed mb-2">
+                      Condition 4 is particularly nuanced for AI. NIH's IDE guidance notes that if an investigational test uses new technology or represents a significant technological advance, existing diagnostic products or procedures may not be adequate to confirm what the AI concluded.
+                    </p>
+                    <p className="text-sm text-amber-900 leading-relaxed mb-2">
+                      Put plainly: if your AI is doing something novel enough that no established method can independently verify its output, condition 4 cannot be met. You cannot satisfy the confirmation requirement with a procedure that wasn't designed to detect what your AI detects.
+                    </p>
+                    <p className="text-sm text-amber-900 leading-relaxed mb-2">
+                      There is one exception: if the diagnostic is not being used to make treatment decisions for subjects in the study, confirmation is not required under this criterion.
+                    </p>
+                    <p className="text-xs text-amber-700 mt-2">
+                      Source: <a href="https://www.cc.nih.gov/orcs/ide/exemption-criteria-study-risk-determination#collapseTwox" target="_blank" className="underline hover:text-amber-900">NIH Clinical Center IDE Exemption Criteria Guidance</a>
+                    </p>
+                  </div>
+                </Expand>
+                <Expand title="Consumer preference / modification testing: conditions">
+                  <CheckList items={[
+                    "The device is already in commercial distribution",
+                    "Testing is for consumer preference or a device modification only",
+                    "NOT intended to determine safety or effectiveness",
+                    "Does not put subjects at risk",
+                  ]}/>
+                </Expand>
+                <Expand title="Custom device: conditions">
+                  <CheckList items={[
+                    "Limited to 5 or fewer units per year of this device type",
+                    "NOT being used to determine safety or effectiveness for commercial distribution",
+                    "Annual FDA reporting is required",
+                  ]}/>
+                </Expand>
+              </div>
+            )}
+
+            {/* SR prongs */}
+            {node.srProngs && (
+              <div className="space-y-2">
+                <div className="border border-slate-200 rounded-lg p-4 space-y-2">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">21 CFR 812.3(m): Significant Risk Device Prongs</p>
+                  <p className="text-sm text-slate-600">A device is SR if it meets <strong>one or more</strong> of these AND presents a potential for serious risk to subject health, safety, or welfare:</p>
+                  <ul className="space-y-2 mt-2">
+                    {[
+                      "Intended as an implant",
+                      "Purported or represented to support or sustain human life",
+                      "For use of substantial importance in diagnosing, curing, mitigating, or treating disease, or preventing impairment of human health",
+                      "Otherwise presents a potential for serious risk to subjects",
+                    ].map((p,i) => (
+                      <li key={i} className="flex gap-2 text-sm text-slate-700">
+                        <span className="flex-shrink-0 font-semibold text-slate-400 w-5">{i+1}.</span>
+                        <span>{p}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-            );
-        };
+                <InfoBox color="amber" icon="warn">
+                  Prong 3 ("substantial importance in diagnosing or treating disease") covers most AI clinical decision support tools that are not exempt under the Cures Act. If your software outputs influence diagnosis or treatment and are not independently confirmed, it likely meets prong 3 and the serious risk threshold.
+                </InfoBox>
+                <Expand title="How do I assess 'potential for serious risk'?">
+                  <CheckList items={[
+                    "Could an incorrect output lead to a missed or delayed diagnosis?",
+                    "Could an incorrect output lead to inappropriate treatment or dosing?",
+                    "Could subjects be harmed if the output is acted on without independent confirmation?",
+                    "Is the population being studied particularly vulnerable (pediatric, critically ill, etc.)?",
+                  ]}/>
+                  <p className="text-sm text-slate-600 mt-2">If the answer to any of these is yes, serious risk potential is likely present. Present your analysis to your IRB. They make the binding determination.</p>
+                </Expand>
+              </div>
+            )}
 
-        // Render the app
-        ReactDOM.render(<SaMDDecisionTree />, document.getElementById('root'));
-    </script>
+            {/* risk mitigation detail */}
+            {node.mitigationDetail && (
+              <div className="space-y-2">
+                <Expand title="What counts as adequate risk mitigation?">
+                  <CheckList items={[
+                    "All outputs must be confirmed by standard clinical procedures before any action is taken",
+                    "Outputs are clearly labeled as advisory only with no clinical action required",
+                    "Independent clinical oversight reviews outputs before they reach patients",
+                    "The device does not replace or override standard of care",
+                    "A monitoring plan is in place to detect safety issues",
+                  ]}/>
+                </Expand>
+                <Expand title="What will my IRB evaluate?">
+                  <CheckList items={[
+                    "Whether study design prevents the device from directly influencing patient care",
+                    "Whether safeguards are adequate to protect participants",
+                    "Whether monitoring plans are sufficient to detect safety concerns",
+                    "Whether risk mitigation strategies are documented in the protocol",
+                  ]}/>
+                </Expand>
+                <InfoBox color="teal" icon="info">SR vs NSR depends on study procedures and safeguards, not just the device's intended use. Document everything and work with your IRB.</InfoBox>
+              </div>
+            )}
+
+            {/* generic body blocks */}
+            {node.body && <div className="space-y-3">{renderBody(node.body)}</div>}
+
+          </div>
+
+          {/* Answer options / conclusion */}
+          <div className="px-7 py-6">
+            {isConclusion ? (
+              <div className="space-y-5">
+                {/* details */}
+                {node.details && (
+                  <ul className="space-y-2">
+                    {node.details.map((d,i) => (
+                      <li key={i} className="flex gap-2 text-sm text-slate-700">
+                        <span className="mt-0.5 brand-text"><Icon.chevron/></span>
+                        <span>{d}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {node.requirements && (
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Regulatory Requirements</p>
+                    <CheckList items={node.requirements} color="teal"/>
+                  </div>
+                )}
+                {node.next_steps && (
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Recommended Next Steps</p>
+                    <ol className="space-y-2">
+                      {node.next_steps.map((s,i) => (
+                        <li key={i} className="flex gap-2 text-sm text-slate-700">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center mt-0.5" style={{backgroundColor:"var(--brand-mid)", color:"var(--brand-dark)"}}>{i+1}</span>
+                          <span>{s}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+                {node.considerations && (
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Additional Considerations</p>
+                    <ul className="space-y-1">
+                      {node.considerations.map((c,i) => (
+                        <li key={i} className="flex gap-2 text-sm text-slate-600">
+                          <span className="flex-shrink-0 mt-1 text-slate-400">•</span>
+                          <span>{c}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* action buttons */}
+                <div className="flex flex-wrap gap-3 pt-1">
+                  <button
+                    onClick={() => setShowSummary(s => !s)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold brand-outline rounded-lg transition-colors"
+                  >
+                    <Icon.print/> {showSummary ? 'Hide' : 'Generate'} IRB Submission Summary
+                  </button>
+                  {node.opts.map((o,i) => (
+                    <button key={i} onClick={() => go(o)}
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors">
+                      <Icon.refresh/> {o.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {node.opts.map((o,i) => (
+                  <button key={i} onClick={() => go(o)}
+                    className="w-full text-left flex items-center justify-between gap-3 px-4 py-3.5 border-2 border-slate-200 rounded-xl brand-border-hover hover:bg-slate-50 transition-all group">
+                    <span className="text-sm font-medium text-slate-800 group-hover:text-slate-900">{o.label}</span>
+                    <span className="text-slate-400 group-hover:text-slate-700 flex-shrink-0"><Icon.chevron/></span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* IRB Summary */}
+        {showSummary && isConclusion && (
+          <div className="fade-in">
+            <IRBSummary history={history}/>
+            <div className="mt-3 no-print">
+              <button onClick={() => window.print()}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-semibold brand-bg text-white rounded-lg brand-hover transition-colors shadow-sm">
+                <Icon.print/> Print / Save as PDF
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="mt-8 text-center text-xs text-slate-400 space-y-1 no-print">
+          <p>Based on 21 CFR 56, 21 CFR 812, and FDA/IMDRF SaMD Clinical Evaluation Guidance</p>
+          <p>Created by Tamiko Eto, MA, CIP · TechInHSR LLC · <a href="https://techinhsr.com" className="brand-text hover:underline">techinhsr.com</a></p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
 </body>
 </html>
